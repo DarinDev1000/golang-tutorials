@@ -46,7 +46,11 @@ func main() {
 	}
 	fmt.Printf("Album found: %v\n", alb)
 
-	albID, err := addAlbum(Album{
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	albID, err := addAlbum(tx, Album{
 		Title:  "The Modern Sound of Betty Carter",
 		Artist: "Betty Carter",
 		Price:  49.99,
@@ -54,6 +58,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	tx.Commit()
 	fmt.Printf("ID of added album: %v\n", albID)
 }
 
@@ -98,8 +103,8 @@ func albumByID(id int64) (Album, error) {
 
 // addAlbum adds the specified album to the database,
 // returning the album ID of the new entry
-func addAlbum(alb Album) (int64, error) {
-	result, err := db.Exec("INSERT INTO album (title, artist, price) VALUES (?, ?, ?)", alb.Title, alb.Artist, alb.Price)
+func addAlbum(tx *sql.Tx, alb Album) (int64, error) {
+	result, err := tx.Exec("INSERT INTO album (title, artist, price) VALUES (?, ?, ?)", alb.Title, alb.Artist, alb.Price)
 	if err != nil {
 		return 0, fmt.Errorf("addAlbum: %v", err)
 	}
